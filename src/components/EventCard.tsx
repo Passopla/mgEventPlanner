@@ -1,11 +1,12 @@
 import { CalendarDays, Clock, Music, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { format } from "date-fns";
 
 export type VenueSection = "Main Hall" | "Lounge" | "Rooftop";
 
 interface EventCardProps {
   title: string;
-  date: string;
+  date: Date;
   time: string;
   section: VenueSection;
   djs: string[];
@@ -18,7 +19,7 @@ export const EventCard = ({ title, date, time, section, djs = [] }: EventCardPro
       <div className="space-y-2">
         <div className="flex items-center text-venue-muted">
           <CalendarDays className="w-4 h-4 mr-2" />
-          <span>{date}</span>
+          <span>{format(date, 'PPP')}</span>
         </div>
         <div className="flex items-center text-venue-muted">
           <Clock className="w-4 h-4 mr-2" />

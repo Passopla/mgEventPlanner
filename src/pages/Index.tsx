@@ -3,29 +3,45 @@ import { EventCard, VenueSection } from "@/components/EventCard";
 import { DJCard } from "@/components/DJCard";
 import { Plus, UserPlus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import { format } from "date-fns";
 
 const Index = () => {
   const { toast } = useToast();
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState<string>();
+  
+  // Generate time slots from 12 PM to 6 AM
+  const timeSlots = Array.from({ length: 19 }, (_, i) => {
+    const hour = (i + 12) % 24;
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:00 ${period}`;
+  });
   
   // Sample data - in a real app, this would come from a backend
   const events = [
     { 
       title: "Summer Night Party", 
-      date: "2024-06-15", 
+      date: new Date('2024-06-15'), 
       time: "22:00", 
       section: "Main Hall" as VenueSection,
       djs: ["DJ Max", "DJ Sarah", "DJ Alex"]
     },
     { 
       title: "Retro Classics", 
-      date: "2024-06-16", 
+      date: new Date('2024-06-16'), 
       time: "21:00", 
       section: "Lounge" as VenueSection,
       djs: ["DJ Sarah"]
     },
     { 
       title: "Electronic Dreams", 
-      date: "2024-06-17", 
+      date: new Date('2024-06-17'), 
       time: "23:00", 
       section: "Rooftop" as VenueSection,
       djs: []
@@ -59,10 +75,54 @@ const Index = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-venue-text">Venue Dashboard</h1>
-          <Button className="bg-venue-accent hover:bg-venue-accent/90">
-            <Plus className="w-4 h-4 mr-2" />
-            New Event
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-venue-accent hover:bg-venue-accent/90">
+                <Plus className="w-4 h-4 mr-2" />
+                New Event
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Event</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="flex flex-col space-y-2">
+                  <label className="text-sm font-medium">Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline">
+                        {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex flex-col space-y-2">
+                  <label className="text-sm font-medium">Time</label>
+                  <Select onValueChange={setSelectedTime}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
