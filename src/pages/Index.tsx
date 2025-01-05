@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { EventCard, VenueSection } from "@/components/EventCard";
 import { DJCard } from "@/components/DJCard";
-import { Plus } from "lucide-react";
+import { Plus, UserPlus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
+  const { toast } = useToast();
+  
   // Sample data - in a real app, this would come from a backend
   const events = [
     { 
@@ -35,6 +38,22 @@ const Index = () => {
     { name: "DJ Alex", genre: "EDM, Pop", available: true },
   ];
 
+  const handleAddDJ = () => {
+    if (djs.length >= 30) {
+      toast({
+        title: "Maximum DJ limit reached",
+        description: "You cannot add more than 30 DJs to the roster.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // In a real app, this would open a form to add a new DJ
+    toast({
+      title: "Add DJ",
+      description: "This would open a form to add a new DJ in a real application.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-venue-background p-8">
       <div className="max-w-7xl mx-auto">
@@ -57,11 +76,24 @@ const Index = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-venue-text mb-4">DJ Roster</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-venue-text">DJ Roster</h2>
+              <span className="text-sm text-venue-muted">
+                {djs.length}/30 DJs
+              </span>
+            </div>
             <div className="space-y-4">
               {djs.map((dj, index) => (
                 <DJCard key={index} {...dj} />
               ))}
+              <Button 
+                onClick={handleAddDJ} 
+                variant="outline" 
+                className="w-full mt-4"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add DJ
+              </Button>
             </div>
           </section>
         </div>
