@@ -7,6 +7,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { format } from "date-fns";
 
@@ -14,6 +15,9 @@ const Index = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
+  const [eventName, setEventName] = useState("");
+  const [selectedSection, setSelectedSection] = useState<string>();
+  const [selectedDJs, setSelectedDJs] = useState<string[]>([]);
   
   // Generate time slots from 12 PM to 6 AM
   const timeSlots = Array.from({ length: 19 }, (_, i) => {
@@ -29,21 +33,21 @@ const Index = () => {
       title: "Summer Night Party", 
       date: new Date('2024-06-15'), 
       time: "22:00", 
-      section: "Main Hall" as VenueSection,
+      section: "Miami Gold" as VenueSection,
       djs: ["DJ Max", "DJ Sarah", "DJ Alex"]
     },
     { 
       title: "Retro Classics", 
       date: new Date('2024-06-16'), 
       time: "21:00", 
-      section: "Lounge" as VenueSection,
+      section: "Grewv Lounge" as VenueSection,
       djs: ["DJ Sarah"]
     },
     { 
       title: "Electronic Dreams", 
       date: new Date('2024-06-17'), 
       time: "23:00", 
-      section: "Rooftop" as VenueSection,
+      section: "Budfathers" as VenueSection,
       djs: []
     },
   ];
@@ -63,10 +67,26 @@ const Index = () => {
       });
       return;
     }
-    // In a real app, this would open a form to add a new DJ
     toast({
       title: "Add DJ",
       description: "This would open a form to add a new DJ in a real application.",
+    });
+  };
+
+  const handleDJSelection = (djName: string) => {
+    setSelectedDJs(prev => {
+      if (prev.includes(djName)) {
+        return prev.filter(dj => dj !== djName);
+      }
+      if (prev.length >= 8) {
+        toast({
+          title: "Maximum DJs reached",
+          description: "You cannot add more than 8 DJs to an event.",
+          variant: "destructive",
+        });
+        return prev;
+      }
+      return [...prev, djName];
     });
   };
 
@@ -82,11 +102,19 @@ const Index = () => {
                 New Event
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Create New Event</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                <div className="flex flex-col space-y-2">
+                  <label className="text-sm font-medium">Event Name</label>
+                  <Input
+                    placeholder="Enter event name"
+                    value={eventName}
+                    onChange={(e) => setEventName(e.target.value)}
+                  />
+                </div>
                 <div className="flex flex-col space-y-2">
                   <label className="text-sm font-medium">Date</label>
                   <Popover>
@@ -119,6 +147,48 @@ const Index = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="flex flex-col space-y-2">
+                  <label className="text-sm font-medium">Venue Section</label>
+                  <Select onValueChange={setSelectedSection}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Miami Gold">Miami Gold</SelectItem>
+                      <SelectItem value="Grewv Lounge">Grewv Lounge</SelectItem>
+                      <SelectItem value="Budfathers">Budfathers</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col space-y-2">
+                  <label className="text-sm font-medium">Select DJs ({selectedDJs.length}/8)</label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select DJs" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {djs.map((dj) => (
+                        <SelectItem 
+                          key={dj.name} 
+                          value={dj.name}
+                          className={selectedDJs.includes(dj.name) ? "bg-primary/10" : ""}
+                          onClick={() => handleDJSelection(dj.name)}
+                        >
+                          {dj.name} - {dj.genre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedDJs.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedDJs.map((dj) => (
+                        <div key={dj} className="bg-primary/10 px-2 py-1 rounded-md text-sm">
+                          {dj}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </DialogContent>
