@@ -1,14 +1,32 @@
 import { Button } from "@/components/ui/button";
-import { EventCard } from "@/components/EventCard";
+import { EventCard, VenueSection } from "@/components/EventCard";
 import { DJCard } from "@/components/DJCard";
 import { Plus } from "lucide-react";
 
 const Index = () => {
   // Sample data - in a real app, this would come from a backend
   const events = [
-    { title: "Summer Night Party", date: "2024-06-15", time: "22:00", dj: "DJ Max" },
-    { title: "Retro Classics", date: "2024-06-16", time: "21:00", dj: "DJ Sarah" },
-    { title: "Electronic Dreams", date: "2024-06-17", time: "23:00" },
+    { 
+      title: "Summer Night Party", 
+      date: "2024-06-15", 
+      time: "22:00", 
+      section: "Main Hall" as VenueSection,
+      djs: ["DJ Max", "DJ Sarah", "DJ Alex"]
+    },
+    { 
+      title: "Retro Classics", 
+      date: "2024-06-16", 
+      time: "21:00", 
+      section: "Lounge" as VenueSection,
+      djs: ["DJ Sarah"]
+    },
+    { 
+      title: "Electronic Dreams", 
+      date: "2024-06-17", 
+      time: "23:00", 
+      section: "Rooftop" as VenueSection,
+      djs: []
+    },
   ];
 
   const djs = [
