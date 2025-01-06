@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
@@ -86,6 +86,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
+          <DialogDescription>Fill in the event details below.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="flex flex-col space-y-2">
@@ -108,8 +109,10 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => setSelectedDate(date)}
+                  onSelect={setSelectedDate}
                   initialFocus
+                  fromDate={new Date()}
+                  className="rounded-md border"
                 />
               </PopoverContent>
             </Popover>
