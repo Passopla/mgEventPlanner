@@ -25,7 +25,10 @@ export const DatePickerComponent = ({ selectedDate, onDateChange }: DatePickerPr
             onSelect={onDateChange}
             initialFocus
             fromDate={new Date()}
-            className="rounded-md border"
+            className="rounded-md border shadow-md"
+            disabled={(date) => date < new Date()}
+            fixedWeeks
+            showOutsideDays={false}
           />
         </PopoverContent>
       </Popover>
