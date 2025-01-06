@@ -100,7 +100,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
             <label className="text-sm font-medium">Date</label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="w-full justify-start text-left font-normal">
                   {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
                 </Button>
               </PopoverTrigger>
@@ -108,7 +108,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={setSelectedDate}
+                  onSelect={(date) => setSelectedDate(date)}
                   initialFocus
                 />
               </PopoverContent>
@@ -116,7 +116,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
           </div>
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium">Time</label>
-            <Select onValueChange={setSelectedTime}>
+            <Select onValueChange={setSelectedTime} value={selectedTime}>
               <SelectTrigger>
                 <SelectValue placeholder="Select time" />
               </SelectTrigger>
@@ -131,7 +131,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
           </div>
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium">Venue Section</label>
-            <Select onValueChange={setSelectedSection}>
+            <Select onValueChange={setSelectedSection} value={selectedSection}>
               <SelectTrigger>
                 <SelectValue placeholder="Select section" />
               </SelectTrigger>
