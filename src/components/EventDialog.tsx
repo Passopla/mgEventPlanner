@@ -2,12 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { useState } from "react";
 import { VenueSection } from "./EventCard";
 import { useToast } from "@/hooks/use-toast";
+import { DatePickerComponent } from "./DatePickerComponent";
 
 interface DJ {
   name: string;
@@ -97,26 +95,12 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
               onChange={(e) => setEventName(e.target.value)}
             />
           </div>
-          <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium">Date</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                  {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  initialFocus
-                  fromDate={new Date()}
-                  className="rounded-md border"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          
+          <DatePickerComponent 
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
+
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium">Time</label>
             <Select onValueChange={setSelectedTime} value={selectedTime}>
@@ -132,6 +116,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
               </SelectContent>
             </Select>
           </div>
+
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium">Venue Section</label>
             <Select onValueChange={setSelectedSection} value={selectedSection}>
@@ -145,6 +130,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
               </SelectContent>
             </Select>
           </div>
+
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium">Select DJs ({selectedDJs.length}/8)</label>
             <Select>
