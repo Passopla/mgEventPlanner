@@ -22,11 +22,18 @@ export const DatePickerComponent = ({ selectedDate, onDateChange }: DatePickerPr
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={onDateChange}
+            onSelect={(date) => {
+              onDateChange(date);
+              console.log("Date selected:", date); // Add logging to debug
+            }}
             initialFocus
             fromDate={new Date()}
             className="rounded-md border shadow-md"
-            disabled={(date) => date < new Date()}
+            disabled={(date) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              return date < today;
+            }}
             fixedWeeks
             showOutsideDays={false}
           />

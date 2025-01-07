@@ -62,6 +62,8 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
       return;
     }
 
+    console.log("Creating event with date:", selectedDate); // Add logging
+
     onEventCreate({
       title: eventName,
       date: selectedDate,
@@ -98,7 +100,10 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
           
           <DatePickerComponent 
             selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
+            onDateChange={(date) => {
+              console.log("Date changed in EventDialog:", date); // Add logging
+              setSelectedDate(date);
+            }}
           />
 
           <div className="flex flex-col space-y-2">
@@ -124,9 +129,9 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
                 <SelectValue placeholder="Select section" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Miami Gold">Miami Gold</SelectItem>
-                <SelectItem value="Grewv Lounge">Grewv Lounge</SelectItem>
-                <SelectItem value="Budfathers">Budfathers</SelectItem>
+                <SelectItem value="Main Hall">Main Hall</SelectItem>
+                <SelectItem value="Lounge">Lounge</SelectItem>
+                <SelectItem value="Rooftop">Rooftop</SelectItem>
               </SelectContent>
             </Select>
           </div>
