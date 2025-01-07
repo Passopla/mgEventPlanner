@@ -18,14 +18,11 @@ export const DatePickerComponent = ({ selectedDate, onDateChange }: DatePickerPr
             {selectedDate ? format(selectedDate, 'PPP') : 'Pick a date'}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent align="start" className="w-auto p-0">
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) => {
-              onDateChange(date);
-              console.log("Date selected:", date); // Add logging to debug
-            }}
+            onSelect={onDateChange}
             initialFocus
             fromDate={new Date()}
             className="rounded-md border shadow-md"
