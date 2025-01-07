@@ -22,7 +22,14 @@ export const DatePickerComponent = ({ selectedDate, onDateChange }: DatePickerPr
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={onDateChange}
+            onSelect={(date) => {
+              console.log("Date selected in DatePicker:", date);
+              if (date) {
+                // Ensure we're working with a Date object
+                const newDate = new Date(date);
+                onDateChange(newDate);
+              }
+            }}
             initialFocus
             fromDate={new Date()}
             className="rounded-md border shadow-md"

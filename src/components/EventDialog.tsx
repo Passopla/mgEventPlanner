@@ -53,7 +53,16 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
   };
 
   const handleCreateEvent = () => {
+    console.log("Creating event with date:", selectedDate);
+    
     if (!eventName || !selectedDate || !selectedTime || !selectedSection) {
+      console.log("Validation failed:", {
+        eventName,
+        selectedDate,
+        selectedTime,
+        selectedSection
+      });
+      
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
@@ -61,8 +70,6 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
       });
       return;
     }
-
-    console.log("Creating event with date:", selectedDate); // Add logging
 
     onEventCreate({
       title: eventName,
@@ -101,7 +108,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
           <DatePickerComponent 
             selectedDate={selectedDate}
             onDateChange={(date) => {
-              console.log("Date changed in EventDialog:", date); // Add logging
+              console.log("Date changed in EventDialog:", date);
               setSelectedDate(date);
             }}
           />
@@ -165,6 +172,7 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
               </div>
             )}
           </div>
+
           <Button 
             className="w-full mt-6" 
             onClick={handleCreateEvent}
