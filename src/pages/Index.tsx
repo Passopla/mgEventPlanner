@@ -6,10 +6,14 @@ import { useState } from "react";
 import { EventDialog } from "@/components/EventDialog";
 import { EventsList } from "@/components/EventsList";
 import { VenueSection } from "@/components/EventCard";
+import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react';
 
 const Index = () => {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const supabase = useSupabaseClient();
+  const session = useSession();
+
   const [events, setEvents] = useState([
     { 
       title: "Summer Night Party", 
@@ -40,6 +44,30 @@ const Index = () => {
     { name: "DJ Alex", genre: "EDM, Pop", available: true },
   ];
 
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          scopes: 'https://www.googleapis.com/auth/calendar',
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Successfully logged in with Google!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to login with Google. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddDJ = () => {
     if (djs.length >= 30) {
       toast({
@@ -55,12 +83,51 @@ const Index = () => {
     });
   };
 
-  const handleCreateEvent = (eventData: any) => {
-    setEvents(prev => [...prev, eventData]);
-    toast({
-      title: "Event Created",
-      description: "The event has been successfully added to the calendar.",
-    });
+  const handleCreateEvent = async (eventData: any) => {
+    if (!session) {
+      toast({
+        title: "Login Required",
+        description: "Please login with Google to create events in your calendar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setEvents(prev => [...prev, eventData]);
+      
+      // Add event to Google Calendar
+      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.provider_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          summary: eventData.title,
+          start: {
+            dateTime: new Date(eventData.date).toISOString(),
+          },
+          end: {
+            dateTime: new Date(new Date(eventData.date).getTime() + 3600000).toISOString(),
+          },
+          description: `Venue Section: ${eventData.section}\nDJs: ${eventData.djs.join(', ')}`,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create Google Calendar event');
+
+      toast({
+        title: "Event Created",
+        description: "The event has been added to your calendar.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create event in Google Calendar. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -68,13 +135,23 @@ const Index = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-venue-text">Venue Dashboard</h1>
-          <Button 
-            className="bg-venue-accent hover:bg-venue-accent/90"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Event
-          </Button>
+          <div className="flex gap-4">
+            {!session && (
+              <Button 
+                variant="outline"
+                onClick={handleGoogleLogin}
+              >
+                Login with Google
+              </Button>
+            )}
+            <Button 
+              className="bg-venue-accent hover:bg-venue-accent/90"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Event
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
