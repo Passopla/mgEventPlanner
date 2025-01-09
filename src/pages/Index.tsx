@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { DJCard } from "@/components/DJCard";
 import { Plus, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { EventDialog } from "@/components/EventDialog";
+import { useState, useEffect } from "react";
+import { EventDialog, type EventData  } from "@/components/EventDialog";
 import { EventsList } from "@/components/EventsList";
 import { VenueSection } from "@/components/EventCard";
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react';
@@ -14,29 +14,78 @@ const Index = () => {
   const supabase = useSupabaseClient();
   const session = useSession();
 
-  const [events, setEvents] = useState([
-    { 
-      title: "Summer Night Party", 
-      date: new Date('2024-06-15'), 
-      time: "22:00", 
+  interface Event {
+    title: string;
+    date: Date;
+    time: string;
+    section: VenueSection;
+    djs: string[];
+    id: string;
+  }
+
+  const [events, setEvents] = useState<Event[]>([
+    {
+      title: "Summer Night Party",
+      date: new Date("2024-06-15"),
+      time: "22:00",
       section: "Miami Gold" as VenueSection,
-      djs: ["DJ Max", "DJ Sarah", "DJ Alex"]
+      djs: ["DJ Max", "DJ Sarah", "DJ Alex"],
+      id: "1"
     },
-    { 
-      title: "Retro Classics", 
-      date: new Date('2024-06-16'), 
-      time: "21:00", 
+    {
+      title: "Retro Classics",
+      date: new Date("2024-06-16"),
+      time: "21:00",
       section: "Grewv Lounge" as VenueSection,
-      djs: ["DJ Sarah"]
+      djs: ["DJ Sarah"],
+      id: "2"
     },
-    { 
-      title: "Electronic Dreams", 
-      date: new Date('2024-06-17'), 
-      time: "23:00", 
+    {
+      title: "Electronic Dreams",
+      date: new Date("2024-06-17"),
+      time: "23:00",
       section: "Budfathers" as VenueSection,
-      djs: []
+      djs: [],
+      id: "3"
     },
   ]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!session) return;
+      
+      try {
+        const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+          headers: {
+            'Authorization': `Bearer ${session.provider_token}`,
+          },
+        });
+        
+        const data = await response.json();
+        const gleEvents = data.items
+          .filter(event => event.summary.startsWith('GLE- '))
+          .map(event => ({
+            id: event.id,
+            title: event.summary.replace('GLE- ', ''),
+            date: new Date(event.start.dateTime),
+            time: new Date(event.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            section: event.description.match(/Venue Section: (.*)/)?.[1] || '',
+            djs: event.description.match(/DJs: (.*)/)?.[1]?.split(', ') || [],
+          }));
+        
+        setEvents(gleEvents);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch events from calendar",
+          variant: "destructive",
+        });
+      }
+    };
+  
+    fetchEvents();
+  }, [session]);
+  
 
   const djs = [
     { name: "DJ Max", genre: "House, Techno", available: false },
@@ -83,7 +132,8 @@ const Index = () => {
     });
   };
 
-  const handleCreateEvent = async (eventData: any) => {
+
+  const handleCreateEvent = async (eventData: Event) => {
     if (!session) {
       toast({
         title: "Login Required",
@@ -104,14 +154,14 @@ const Index = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          summary: eventData.title,
+          summary: `GLE- ${eventData.title}`,
           start: {
             dateTime: new Date(eventData.date).toISOString(),
           },
           end: {
             dateTime: new Date(new Date(eventData.date).getTime() + 3600000).toISOString(),
           },
-          description: `Venue Section: ${eventData.section}\nDJs: ${eventData.djs.join(', ')}`,
+          description: `GLE-Event\nVenue Section: ${eventData.section}\nDJs: ${eventData.djs.join(', ')}`,
         }),
       });
 
@@ -156,7 +206,7 @@ const Index = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <section>
-            <EventsList events={events} />
+            <EventsList events={events} djs={djs} />
           </section>
 
           <section>
@@ -185,12 +235,11 @@ const Index = () => {
         <EventDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
-          onEventCreate={handleCreateEvent}
+          onEventSave={handleCreateEvent}
           djs={djs}
         />
       </div>
     </div>
   );
 };
-
 export default Index;

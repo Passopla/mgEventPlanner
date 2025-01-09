@@ -1,20 +1,22 @@
 import { CalendarDays, Clock, Music, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { format } from "date-fns";
+import { format } from "date-fns/format";
 
-export type VenueSection = "Main Hall" | "Lounge" | "Rooftop";
+export type VenueSection = "Miami Gold" | "Grewv Lounge" | "BudFathers" | "Sons Cues";
 
 interface EventCardProps {
+  id: string;
   title: string;
   date: Date;
   time: string;
   section: VenueSection;
   djs: string[];
+  onEdit: (id: string) => void; // Callback to handle event edit
 }
 
-export const EventCard = ({ title, date, time, section, djs = [] }: EventCardProps) => {
+export const EventCard = ({ id, title, date, time, section, djs = [], onEdit }: EventCardProps) => {
   return (
-    <Card className="bg-venue-card p-6 hover:shadow-lg transition-all duration-300 border-none">
+    <Card className="bg-venue-card p-6 hover:shadow-lg transition-all duration-300 border-none" onClick={() => onEdit(id)}>
       <h3 className="text-venue-text text-xl font-semibold mb-4">{title}</h3>
       <div className="space-y-2">
         <div className="flex items-center text-venue-muted">

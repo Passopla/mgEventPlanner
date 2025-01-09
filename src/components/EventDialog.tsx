@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { VenueSection } from "./EventCard";
 import { useToast } from "@/hooks/use-toast";
 import { DatePickerComponent } from "./DatePickerComponent";
@@ -16,29 +16,63 @@ interface DJ {
 interface EventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEventCreate: (eventData: any) => void;
+  onEventSave: (eventData: EventData) => void;
   djs: DJ[];
+  selectedEvent?: EventData; // For editing an existing event
 }
 
-export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDialogProps) => {
-  const { toast } = useToast();
-  const [eventName, setEventName] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState<string>();
-  const [selectedSection, setSelectedSection] = useState<string>();
-  const [selectedDJs, setSelectedDJs] = useState<string[]>([]);
+export interface EventData {
+  identifier?: string;
+  title: string;
+  date: Date;
+  time: string;
+  section: VenueSection;
+  djs: string[];
+}
 
-  const timeSlots = Array.from({ length: 19 }, (_, i) => {
+const VENUE_SECTIONS = {
+  MIAMI_GOLD: "Miami Gold",
+  GREWV_LOUNGE: "Grewv Lounge",
+  BUDFATHERS: "BudFathers",
+  SONS_CUES: "Sons Cues"
+} as const;
+
+export const EventDialog = ({
+  open,
+  onOpenChange,
+  onEventSave,
+  djs,
+  selectedEvent,
+}: EventDialogProps) => {
+  const { toast } = useToast();
+
+  const [eventName, setEventName] = useState(selectedEvent?.title || "");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(selectedEvent?.date || undefined);
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(selectedEvent?.time || "");
+  const [selectedSection, setSelectedSection] = useState<string | undefined>(selectedEvent?.section || "");
+  const [selectedDJs, setSelectedDJs] = useState<string[]>(selectedEvent?.djs || []);
+
+  useEffect(() => {
+    if (selectedEvent) {
+      setEventName(selectedEvent.title);
+      setSelectedDate(selectedEvent.date);
+      setSelectedTime(selectedEvent.time);
+      setSelectedSection(selectedEvent.section);
+      setSelectedDJs(selectedEvent.djs);
+    }
+  }, [selectedEvent]);
+
+  const timeSlots = useMemo(() => Array.from({ length: 19 }, (_, i) => {
     const hour = (i + 12) % 24;
-    const period = hour >= 12 ? 'PM' : 'AM';
+    const period = hour >= 12 ? "PM" : "AM";
     const displayHour = hour % 12 || 12;
     return `${displayHour}:00 ${period}`;
-  });
+  }), []);
 
   const handleDJSelection = (djName: string) => {
-    setSelectedDJs(prev => {
+    setSelectedDJs((prev) => {
       if (prev.includes(djName)) {
-        return prev.filter(dj => dj !== djName);
+        return prev.filter((dj) => dj !== djName);
       }
       if (prev.length >= 8) {
         toast({
@@ -52,17 +86,8 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
     });
   };
 
-  const handleCreateEvent = () => {
-    console.log("Creating event with date:", selectedDate);
-    
+  const handleSaveEvent = () => {
     if (!eventName || !selectedDate || !selectedTime || !selectedSection) {
-      console.log("Validation failed:", {
-        eventName,
-        selectedDate,
-        selectedTime,
-        selectedSection
-      });
-      
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
@@ -71,28 +96,43 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
       return;
     }
 
-    onEventCreate({
+    if (selectedDate < new Date()) {
+      toast({
+        title: "Invalid date",
+        description: "Event date cannot be in the past",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const updatedEvent = {
+      identifier: `GLE- ${eventName}`,
       title: eventName,
       date: selectedDate,
       time: selectedTime,
       section: selectedSection as VenueSection,
       djs: selectedDJs,
-    });
+    };
 
-    // Reset form
-    setEventName("");
-    setSelectedDate(undefined);
-    setSelectedTime(undefined);
-    setSelectedSection(undefined);
-    setSelectedDJs([]);
-    onOpenChange(false);
+    onEventSave(updatedEvent); // Save event (either update or create)
+    onOpenChange(false); // Close dialog after saving
   };
-
+  
+  useEffect(() => {
+    if (!open) {
+      setEventName("");
+      setSelectedDate(undefined);
+      setSelectedTime("");
+      setSelectedSection("");
+      setSelectedDJs([]);
+    }
+  }, [open]);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Event</DialogTitle>
+          <DialogTitle>{selectedEvent ? "Edit Event" : "Create New Event"}</DialogTitle>
           <DialogDescription>Fill in the event details below.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -104,13 +144,10 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
               onChange={(e) => setEventName(e.target.value)}
             />
           </div>
-          
-          <DatePickerComponent 
+
+          <DatePickerComponent
             selectedDate={selectedDate}
-            onDateChange={(date) => {
-              console.log("Date changed in EventDialog:", date);
-              setSelectedDate(date);
-            }}
+            onDateChange={(date) => setSelectedDate(date)}
           />
 
           <div className="flex flex-col space-y-2">
@@ -136,9 +173,10 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
                 <SelectValue placeholder="Select section" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Main Hall">Main Hall</SelectItem>
-                <SelectItem value="Lounge">Lounge</SelectItem>
-                <SelectItem value="Rooftop">Rooftop</SelectItem>
+                <SelectItem value="Miami Gold">Miami Gold</SelectItem>
+                <SelectItem value="Grewv Lounge">Grewv Lounge</SelectItem>
+                <SelectItem value="BudFathers">BudFathers</SelectItem>
+                <SelectItem value="Sons Cues">Sons Cues</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -151,8 +189,8 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
               </SelectTrigger>
               <SelectContent>
                 {djs.map((dj) => (
-                  <SelectItem 
-                    key={dj.name} 
+                  <SelectItem
+                    key={dj.name}
                     value={dj.name}
                     className={selectedDJs.includes(dj.name) ? "bg-primary/10" : ""}
                     onClick={() => handleDJSelection(dj.name)}
@@ -173,14 +211,13 @@ export const EventDialog = ({ open, onOpenChange, onEventCreate, djs }: EventDia
             )}
           </div>
 
-          <Button 
-            className="w-full mt-6" 
-            onClick={handleCreateEvent}
-          >
-            Create Event
+          <Button className="w-full mt-6" onClick={handleSaveEvent}>
+            {selectedEvent ? "Save Changes" : "Create Event"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
+
